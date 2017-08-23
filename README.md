@@ -1,14 +1,53 @@
 # iferr
 
-Given a Go file and a byte position, it will generate an appropriate `if err != nil { ... }` statement
+Context-dependent error handling editor plugin for Go
 
-## Installation
+![vim demo](demo.gif)
+
+## Examples
+
+Returns the error value in the correct position, with zero values for other arguments:
+
+```
+func t2() error {
+	if err != nil {
+		return err
+	}
+}
+
+func t3() (string, string, error) {
+	if err != nil {
+		return "", "", err
+	}
+}
+```
+
+When there's no `error` value to return, it uses `log.Fatal(err)`:
+
+```
+func main() {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func t1() (string, string) {
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+```
+
+## Installation and editor integration
+
+The command can be installed in the usual fashion:
 
 ```
 go get github.com/TrustRevoked/iferr
 ```
 
-## Usage
+You can then pass it a Go file and a byte position to generate the appropriate error handling:
 
 ```
 % iferr /path/to/file.go 123
@@ -17,28 +56,20 @@ return "", nil, err
 }
 ```
 
-For functions which don't return an error type, it will use `log.Fatal(err)` instead.
-
-## vim integration
+### vim integration
 
 ```
 function GoIfErr()
   let path = '/tmp/goiferr.txt'
   let position = line2byte(line('.'))+col('.')
   execute 'write!' path
-  let output = system('iferr '.shellescape(path).' '.shellescape(position))
-  let chomped = substitute(output, '\n\+$', '', '')
-  return chomped
+  return system('iferr '.shellescape(path).' '.shellescape(position))
 endfunction
 
-iabbrev <expr> iferr GoIfErr()
+inoremap <C-E> <C-R>=GoIfErr()<CR>
 ```
 
-Then you can type "iferr" anywhere and it'll be expanded.
-
-## Limitations
-
-Currently it only looks for top-level declarations. So it won't produce the correct output for inline functions.
+Then type Ctrl+E in insert mode to add the appropriate error handling code.
 
 ## License
 
